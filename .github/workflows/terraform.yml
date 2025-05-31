@@ -6,6 +6,7 @@ on:
             - stage
         paths: #and pushed on these folder
             - terraform/**
+            - .github/**
     pull_request: #when pull request comes
         branches: #and merged on these branches
             - main
