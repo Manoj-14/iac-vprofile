@@ -42,7 +42,7 @@ jobs:
 
             - name: Terrafrom init
               id: inti # id is to refference it in next task , git info of the task
-              run: terraform inti -backed-config="bucket=$BUCKET_TF_STATE" #run the terraform inti and sore the state file (backed file) in mentioned s3
+              run: terraform init -backed-config="bucket=$BUCKET_TF_STATE" #run the terraform inti and sore the state file (backed file) in mentioned s3
 
             - name: Terraform format #to check the tf file fmt is correct or not
               id: fmt
