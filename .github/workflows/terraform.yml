@@ -37,7 +37,7 @@ jobs:
               #here after getting into ubuntu container it is going to terraform dir then checkout to branch
             
             - name: Setup terraform with specific version on runner
-              uses: hashicorp/setup-terraform@v3 #predefined in marketplace (https://github.com/marketplace/actions/hashicorp-setup-terraform)
+              uses: hashicorp/setup-terraform@v2 #predefined in marketplace (https://github.com/marketplace/actions/hashicorp-setup-terraform)
             #   with:
             #     terraform_version: 1.6.3 # this is terrsaform version
 
