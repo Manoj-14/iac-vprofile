@@ -1,0 +1,65 @@
+name: "vprofile IAC"
+on:
+    push: 
+        branches: #when pushed on these branches
+            - main
+            - stage
+        paths: #and pushed on these folder
+            - terraform/**
+    pull_request: #when pull request comes
+        branches: #and merged on these branches
+            - main
+        paths: #and pushed on these folder
+            - terraform/*
+
+env:
+    AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}} #get from github secret
+    AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+    BUCKET_TF_STATE: ${{secrets.BUCKET_TF_STATE}}
+    AWS_REGION: us-east-1
+    EKS_CLUSTER: vprofile-eks
+
+# can have multiple jobs    
+jobs:
+    #name of the job
+    terraform:
+        name: "Apply terraform code changes"
+        runs-on: ubuntu-latest #in which machine we need to run (uses ubuntu container)
+        defaults: #what defaults things to use
+            run:
+                shell: bash #use bash shell
+                working-directory: ./terraform #so this folder will be used by all the steps that we write below
+
+        steps:
+            - name: Check out the source code
+              uses: actions/checkout@v4  #use predefined checkout workflow (https://github.com/marketplace/actions/checkout)
+              #here after getting into ubuntu container it is going to terraform dir then checkout to branch
+            
+            - name: Setup terraform with specific version on runner
+              uses: hashicorp/setup-terraform@v3 #predefined in marketplace (https://github.com/marketplace/actions/hashicorp-setup-terraform)
+            #   with:
+            #     terraform_version: 1.6.3 # this is terrsaform version
+
+            - name: Terrafrom init
+              id: inti # id is to refference it in next task , git info of the task
+              run: terraform inti -backed-config="bucket=$BUCKET_TF_STATE" #run the terraform inti and sore the state file (backed file) in mentioned s3
+
+            - name: Terraform format #to check the tf file fmt is correct or not
+              id: fmt
+              run: terraform fmt -check # -check option will only check if we don't mention means it will format the file
+              # the above will return non zero value if the format is not correct then the work flow will fail
+            
+            - name: Terraform validate
+              id: validate
+              run: terraform validate #going to check the syntex and other things, if non 0 then it will fail
+            
+            - name: Terraform plan
+              id: plan
+              run: terraform plan -no-color -input=false -out planfile  # like a dry run (-no-color => while returing output not need of color to save GPU, -input no user input is accepted, -out the save the put put in planout file)
+              continue-on-error: true # even the error comes proceed with next step (we will handle in next step)
+            
+            - name: Terraform plan status
+              #we check plan is failed?
+              if: steps.plan.outcome == 'failure'
+              run: exit 1
+
